@@ -14,6 +14,8 @@ An RP2350 UART driver written entirely in Assembler.
 ## NOTE: Be SURE to select `Add path to environment variable` on setup.
 [HERE](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
 
+<br>
+
 # Build
 ```
 .\build.bat
