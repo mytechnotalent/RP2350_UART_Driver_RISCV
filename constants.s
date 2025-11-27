@@ -6,7 +6,7 @@
  * 
  * BRIEF:
  * Defines all memory-mapped register addresses and constants used
- * throughout the RP2350 UART driver.
+ * throughout the RP2350 driver.
  *
  * AUTHOR: Kevin Thomas
  * CREATION DATE: November 27, 2025
