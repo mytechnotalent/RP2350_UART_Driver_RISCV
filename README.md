@@ -5,7 +5,7 @@
 
 <br>
 
-# RP2350 Blink Driver
+# RP2350 UART Driver
 An RP2350 UART driver written entirely in Assembler.
 
 <br>
@@ -14,24 +14,35 @@ An RP2350 UART driver written entirely in Assembler.
 ## NOTE: Be SURE to select `Add path to environment variable` on setup.
 [HERE](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
 
+# Build
+```
+.\build.bat
+```
+
 <br>
 
-# Code
+# Clean
+```
+.\clean.bat
+```
+
+<br>
+
+# constants Code
 ```assembler
 /**
- * FILE: main.s
+ * FILE: constants.s
  *
  * DESCRIPTION:
- * RP2350 Bare-Metal UART.
+ * RP2350 Memory Addresses and Constants.
  * 
  * BRIEF:
- * Minimal bare-metal UART on the RP2350. This bypasses
- * SDK abstractions and demonstrates register-level control in assembler.
- * Clocks the external crystal oscillator (XOSC) at 14.5MHz.
+ * Defines all memory-mapped register addresses and constants used
+ * throughout the RP2350 UART driver.
  *
  * AUTHOR: Kevin Thomas
- * CREATION DATE: November 2, 2025
- * UPDATE DATE: November 2, 2025
+ * CREATION DATE: November 27, 2025
+ * UPDATE DATE: November 27, 2025
  */
 
 .syntax unified                                  // use unified assembly syntax
@@ -60,6 +71,32 @@ An RP2350 UART driver written entirely in Assembler.
 .equ PADS_BANK0_BASE,             0x40038000               
 .equ PADS_BANK0_GPIO16_OFFSET,    0x44                    
 .equ UART0_BASE,                  0x40070000
+```
+
+<br>
+
+# vector_table Code
+```assembler
+/**
+ * FILE: vector_table.s
+ *
+ * DESCRIPTION:
+ * RP2350 Vector Table.
+ * 
+ * BRIEF:
+ * Defines the vector table for the RP2350 containing the initial
+ * stack pointer and reset handler entry point.
+ *
+ * AUTHOR: Kevin Thomas
+ * CREATION DATE: November 27, 2025
+ * UPDATE DATE: November 27, 2025
+ */
+
+.syntax unified                                  // use unified assembly syntax
+.cpu cortex-m33                                  // target Cortex-M33 core
+.thumb                                           // use Thumb instruction set
+
+.include "constants.s"
 
 /**
  * Initialize the .vectors section. The .vectors section contains vector
@@ -75,32 +112,39 @@ An RP2350 UART driver written entirely in Assembler.
 _vectors:
   .word STACK_TOP                                // initial stack pointer
   .word Reset_Handler + 1                        // reset handler (Thumb bit set)
+```
+
+<br>
+
+# stack Code
+```assembler
+/**
+ * FILE: stack.s
+ *
+ * DESCRIPTION:
+ * RP2350 Stack Initialization.
+ * 
+ * BRIEF:
+ * Provides stack pointer initialization for Main and Process Stack
+ * Pointers (MSP/PSP) and their limits.
+ *
+ * AUTHOR: Kevin Thomas
+ * CREATION DATE: November 27, 2025
+ * UPDATE DATE: November 27, 2025
+ */
+
+.syntax unified                                  // use unified assembly syntax
+.cpu cortex-m33                                  // target Cortex-M33 core
+.thumb                                           // use Thumb instruction set
+
+.include "constants.s"
 
 /**
- * @brief   Reset handler for RP2350.
- *
- * @details Entry point after reset. Performs:
- *          - Stack initialization
- *          - Coprocessor enable
- *          - GPIO16 pad/function configuration
- *          - Branches to main() which contains the blink loop
- *
- * @param   None
- * @retval  None
+ * Initialize the .text section. 
+ * The .text section contains executable code.
  */
-.global Reset_Handler                            // export Reset_Handler symbol
-.type Reset_Handler, %function                        
-.type Reset_Handler, %function                        
-Reset_Handler:
-  bl    Init_Stack                               // initialize MSP/PSP and limits
-  bl    Init_XOSC                                // initialize external crystal oscillator
-  bl    Enable_XOSC_Peri_Clock                   // enable XOSC peripheral clock
-  bl    Init_Subsystem                           // initialize subsystems
-  bl    UART_Release_Reset                       // ensure UART0 out of reset
-  bl    UART_Init                                // initialize UART0 (pins, baud, enable)
-  bl    Enable_Coprocessor                       // enable CP0 coprocessor
-  b     main                                     // branch to main loop
-.size Reset_Handler, . - Reset_Handler
+.section .text                                   // code section
+.align 2                                         // align to 4-byte boundary
 
 /**
  * @brief   Initialize stack pointers.
@@ -110,6 +154,7 @@ Reset_Handler:
  * @param   None
  * @retval  None
  */
+.global Init_Stack
 .type Init_Stack, %function
 Init_Stack:
   ldr   r0, =STACK_TOP                           // load stack top
@@ -120,6 +165,39 @@ Init_Stack:
   ldr   r0, =STACK_TOP                           // reload stack top
   msr   MSP, r0                                  // set MSP
   bx    lr                                       // return
+```
+
+<br>
+
+# xosc Code
+```assembler
+/**
+ * FILE: xosc.s
+ *
+ * DESCRIPTION:
+ * RP2350 External Crystal Oscillator (XOSC) Functions.
+ * 
+ * BRIEF:
+ * Provides functions to initialize the external crystal oscillator
+ * and enable the XOSC peripheral clock.
+ *
+ * AUTHOR: Kevin Thomas
+ * CREATION DATE: November 27, 2025
+ * UPDATE DATE: November 27, 2025
+ */
+
+.syntax unified                                  // use unified assembly syntax
+.cpu cortex-m33                                  // target Cortex-M33 core
+.thumb                                           // use Thumb instruction set
+
+.include "constants.s"
+
+/**
+ * Initialize the .text section. 
+ * The .text section contains executable code.
+ */
+.section .text                                   // code section
+.align 2                                         // align to 4-byte boundary
 
 /**
  * @brief   Init XOSC and wait until it is ready.
@@ -130,6 +208,7 @@ Init_Stack:
  * @param   None
  * @retval  None
  */
+.global Init_XOSC
 .type Init_XOSC, %function
 Init_XOSC:
   ldr   r0, =XOSC_STARTUP                        // load XOSC_STARTUP address
@@ -153,6 +232,7 @@ Init_XOSC:
  * @param   None
  * @retval  None
  */
+.global Enable_XOSC_Peri_Clock
 .type Enable_XOSC_Peri_Clock, %function
 Enable_XOSC_Peri_Clock:
   ldr   r0, =CLK_PERI_CTRL                       // load CLK_PERI_CTRL address
@@ -161,6 +241,39 @@ Enable_XOSC_Peri_Clock:
   orr   r1, r1, #(4<<5)                          // set AUXSRC: XOSC_CLKSRC bit
   str   r1, [r0]                                 // store value into CLK_PERI_CTRL
   bx    lr                                       // return
+```
+
+<br>
+
+# reset Code
+```assembler
+/**
+ * FILE: reset.s
+ *
+ * DESCRIPTION:
+ * RP2350 Reset Controller Functions.
+ * 
+ * BRIEF:
+ * Provides functions to initialize subsystems by clearing their
+ * reset bits in the Reset controller.
+ *
+ * AUTHOR: Kevin Thomas
+ * CREATION DATE: November 27, 2025
+ * UPDATE DATE: November 27, 2025
+ */
+
+.syntax unified                                  // use unified assembly syntax
+.cpu cortex-m33                                  // target Cortex-M33 core
+.thumb                                           // use Thumb instruction set
+
+.include "constants.s"
+
+/**
+ * Initialize the .text section. 
+ * The .text section contains executable code.
+ */
+.section .text                                   // code section
+.align 2                                         // align to 4-byte boundary
 
 /**
  * @brief   Init subsystem.
@@ -170,6 +283,7 @@ Enable_XOSC_Peri_Clock:
  * @param   None
  * @retval  None
  */
+.global Init_Subsystem
 .type Init_Subsystem, %function
 Init_Subsystem:
 .GPIO_Subsystem_Reset:
@@ -183,6 +297,38 @@ Init_Subsystem:
   tst   r1, #(1<<6)                              // test IO_BANK0 reset done
   beq   .GPIO_Subsystem_Reset_Wait               // wait until done
   bx    lr                                       // return
+```
+
+<br>
+
+# coprocessor Code
+```assembler
+/**
+ * FILE: coprocessor.s
+ *
+ * DESCRIPTION:
+ * RP2350 Coprocessor Access Functions.
+ * 
+ * BRIEF:
+ * Provides functions to enable coprocessor access control.
+ *
+ * AUTHOR: Kevin Thomas
+ * CREATION DATE: November 27, 2025
+ * UPDATE DATE: November 27, 2025
+ */
+
+.syntax unified                                  // use unified assembly syntax
+.cpu cortex-m33                                  // target Cortex-M33 core
+.thumb                                           // use Thumb instruction set
+
+.include "constants.s"
+
+/**
+ * Initialize the .text section. 
+ * The .text section contains executable code.
+ */
+.section .text                                   // code section
+.align 2                                         // align to 4-byte boundary
 
 /**
  * @brief   Enable coprocessor access.
@@ -192,6 +338,7 @@ Init_Subsystem:
  * @param   None
  * @retval  None
  */
+.global Enable_Coprocessor
 .type Enable_Coprocessor , %function
 Enable_Coprocessor:
   ldr   r0, =CPACR                               // load CPACR address
@@ -202,6 +349,39 @@ Enable_Coprocessor:
   dsb                                            // data sync barrier
   isb                                            // instruction sync barrier
   bx    lr                                       // return
+```
+
+<br>
+
+# uart Code
+```assembler
+/**
+ * FILE: uart.s
+ *
+ * DESCRIPTION:
+ * RP2350 UART Functions.
+ * 
+ * BRIEF:
+ * Provides UART initialization, transmit, and receive functions for
+ * UART0 on the RP2350.
+ *
+ * AUTHOR: Kevin Thomas
+ * CREATION DATE: November 27, 2025
+ * UPDATE DATE: November 27, 2025
+ */
+
+.syntax unified                                  // use unified assembly syntax
+.cpu cortex-m33                                  // target Cortex-M33 core
+.thumb                                           // use Thumb instruction set
+
+.include "constants.s"
+
+/**
+ * Initialize the .text section. 
+ * The .text section contains executable code.
+ */
+.section .text                                   // code section
+.align 2                                         // align to 4-byte boundary
 
 /**
  * @brief   Release UART0 from reset and wait until it is ready.
@@ -214,6 +394,7 @@ Enable_Coprocessor:
  * @param   None
  * @retval  None
  */
+.global UART_Release_Reset
 .type UART_Release_Reset, %function
 UART_Release_Reset:
   ldr   r0, =RESETS_RESET                        // load RESETS->RESET address
@@ -243,6 +424,7 @@ UART_Release_Reset:
  * @param   None
  * @retval  None
  */
+.global UART_Init
 .type UART_Init, %function
 UART_Init:
   ldr   r0, =IO_BANK0_BASE                       // load IO_BANK0 base
@@ -273,34 +455,6 @@ UART_Init:
   bx    lr                                       // return
 
 /**
- * Initialize the .text section. 
- * The .text section contains executable code.
- */
-.section .text                                   // code section
-.align 2                                         // align to 4-byte boundary
-
-/**
- * @brief   Main application entry point.
- *
- * @details Implements the infinite blink loop.
- *
- * @param   None
- * @retval  None
- */
-.global main                                     // export main
-.type main, %function                            // mark as function
-main:
-.Push_Registers:
-  push  {r4-r12, lr}                             // push registers r4-r12, lr to the stack
-.Loop:
-  bl    UART0_In                                 // call UART0_In
-  bl    UART0_Out                                // call UART0_Out
-  b     .Loop                                    // loop forever
-.Pop_Registers:
-  pop   {r4-r12, lr}                             // pop registers r4-r12, lr from the stack
-  bx    lr                                       // return to caller
-
-/**
  * @brief   UART0 transmit (blocking).
  *
  * @details Waits for TX FIFO to be not full, then writes the lowest 8 bits of r0 to UART0.
@@ -309,6 +463,7 @@ main:
  * @param   r0: byte to transmit (lower 8 bits used)
  * @retval  None
  */
+.global UART0_Out
 .type UART0_Out, %function
 UART0_Out:
 .UART0_Out_Push_Registers:
@@ -334,6 +489,7 @@ UART0_Out:
  * @param   None
  * @retval  r0: received byte (lower 8 bits valid)
  */
+.global UART0_In
 .type UART0_In, %function
 UART0_In:
 .UART0_In_Push_Registers:
@@ -348,6 +504,39 @@ UART0_In:
 .UART0_In_Pop_Registers:
   pop   {r4-r12, lr}                              // pop registers r4-r12, lr from the stack
   bx    lr                                        // return
+```
+
+<br>
+
+# gpio Code
+```assembler
+/**
+ * FILE: gpio.s
+ *
+ * DESCRIPTION:
+ * RP2350 GPIO Functions.
+ * 
+ * BRIEF:
+ * Provides GPIO configuration, set, and clear functions using
+ * coprocessor instructions.
+ *
+ * AUTHOR: Kevin Thomas
+ * CREATION DATE: November 27, 2025
+ * UPDATE DATE: November 27, 2025
+ */
+
+.syntax unified                                  // use unified assembly syntax
+.cpu cortex-m33                                  // target Cortex-M33 core
+.thumb                                           // use Thumb instruction set
+
+.include "constants.s"
+
+/**
+ * Initialize the .text section. 
+ * The .text section contains executable code.
+ */
+.section .text                                   // code section
+.align 2                                         // align to 4-byte boundary
 
 /**
  * @brief   Configure GPIO.
@@ -359,6 +548,7 @@ UART0_In:
  * @param   r2 - GPIO
  * @retval  None
  */
+.global GPIO_Config
 .type GPIO_Config, %function
 GPIO_Config:
 .GPIO_Config_Push_Registers:
@@ -393,6 +583,7 @@ GPIO_Config:
  * @param   r0 - GPIO
  * @retval  None
  */
+.global GPIO_Set
 .type GPIO_Set, %function
 GPIO_Set:
 .GPIO_Set_Push_Registers:
@@ -412,6 +603,7 @@ GPIO_Set:
  * @param   r0 - GPIO
  * @retval  None
  */
+.global GPIO_Clear
 .type GPIO_Clear, %function
 GPIO_Clear:
 .GPIO_Clear_Push_Registers:
@@ -422,6 +614,38 @@ GPIO_Clear:
 .GPIO_Clear_Pop_Registers:
   pop   {r4-r12, lr}                             // pop registers r4-r12, lr from the stack
   bx    lr                                       // return
+```
+
+<br>
+
+# delay Code
+```assembler
+/**
+ * FILE: delay.s
+ *
+ * DESCRIPTION:
+ * RP2350 Delay Functions.
+ * 
+ * BRIEF:
+ * Provides millisecond delay functions based on a 14.5MHz clock.
+ *
+ * AUTHOR: Kevin Thomas
+ * CREATION DATE: November 27, 2025
+ * UPDATE DATE: November 27, 2025
+ */
+
+.syntax unified                                  // use unified assembly syntax
+.cpu cortex-m33                                  // target Cortex-M33 core
+.thumb                                           // use Thumb instruction set
+
+.include "constants.s"
+
+/**
+ * Initialize the .text section. 
+ * The .text section contains executable code.
+ */
+.section .text                                   // code section
+.align 2                                         // align to 4-byte boundary
 
 /**
  * @brief   Delay_MS.
@@ -432,6 +656,7 @@ GPIO_Clear:
  * @param   r0 - milliseconds
  * @retval  None
  */
+.global Delay_MS
 .type Delay_MS, %function
 Delay_MS:
 .Delay_MS_Push_Registers:
@@ -448,6 +673,119 @@ Delay_MS:
 .Delay_MS_Done:
   pop   {r4-r12, lr}                             // pop registers r4-r12, lr from the stack
   bx    lr                                       // return
+```
+
+<br>
+
+# reset_handler Code
+```assembler
+/**
+ * FILE: reset_handler.s
+ *
+ * DESCRIPTION:
+ * RP2350 Reset Handler.
+ * 
+ * BRIEF:
+ * Entry point after reset. Performs initialization sequence including
+ * stack setup, oscillator configuration, subsystem initialization, and
+ * UART setup before branching to main application.
+ *
+ * AUTHOR: Kevin Thomas
+ * CREATION DATE: November 27, 2025
+ * UPDATE DATE: November 27, 2025
+ */
+
+.syntax unified                                  // use unified assembly syntax
+.cpu cortex-m33                                  // target Cortex-M33 core
+.thumb                                           // use Thumb instruction set
+
+.include "constants.s"
+
+/**
+ * Initialize the .text section. 
+ * The .text section contains executable code.
+ */
+.section .text                                   // code section
+.align 2                                         // align to 4-byte boundary
+
+/**
+ * @brief   Reset handler for RP2350.
+ *
+ * @details Entry point after reset. Performs:
+ *          - Stack initialization
+ *          - Coprocessor enable
+ *          - GPIO16 pad/function configuration
+ *          - Branches to main() which contains the blink loop
+ *
+ * @param   None
+ * @retval  None
+ */
+.global Reset_Handler                            // export Reset_Handler symbol
+.type Reset_Handler, %function                        
+Reset_Handler:
+  bl    Init_Stack                               // initialize MSP/PSP and limits
+  bl    Init_XOSC                                // initialize external crystal oscillator
+  bl    Enable_XOSC_Peri_Clock                   // enable XOSC peripheral clock
+  bl    Init_Subsystem                           // initialize subsystems
+  bl    UART_Release_Reset                       // ensure UART0 out of reset
+  bl    UART_Init                                // initialize UART0 (pins, baud, enable)
+  bl    Enable_Coprocessor                       // enable CP0 coprocessor
+  b     main                                     // branch to main loop
+.size Reset_Handler, . - Reset_Handler
+```
+
+<br>
+
+# main Code
+```assembler
+/**
+ * FILE: main.s
+ *
+ * DESCRIPTION:
+ * RP2350 Bare-Metal UART Main Application.
+ * 
+ * BRIEF:
+ * Main application entry point for RP2350 UART driver. Contains the
+ * main loop that echoes UART input to output.
+ *
+ * AUTHOR: Kevin Thomas
+ * CREATION DATE: November 2, 2025
+ * UPDATE DATE: November 27, 2025
+ */
+
+.syntax unified                                  // use unified assembly syntax
+.cpu cortex-m33                                  // target Cortex-M33 core
+.thumb                                           // use Thumb instruction set
+
+.include "constants.s"
+
+/**
+ * Initialize the .text section. 
+ * The .text section contains executable code.
+ */
+.section .text                                   // code section
+.align 2                                         // align to 4-byte boundary
+
+/**
+ * @brief   Main application entry point.
+ *
+ * @details Implements the infinite blink loop.
+ *
+ * @param   None
+ * @retval  None
+ */
+.global main                                     // export main
+.type main, %function                            // mark as function
+main:
+.Push_Registers:
+  push  {r4-r12, lr}                             // push registers r4-r12, lr to the stack
+.Loop:
+  bl    UART0_In                                 // call UART0_In
+  bl    UART0_Out                                // call UART0_Out
+  b     .Loop                                    // loop forever
+.Pop_Registers:
+  pop   {r4-r12, lr}                             // pop registers r4-r12, lr from the stack
+  bx    lr                                       // return to caller
 
 /**
  * Test data and constants.

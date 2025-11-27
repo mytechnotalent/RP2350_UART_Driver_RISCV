@@ -13,12 +13,39 @@ REM CREATION DATE: October 5, 2025
 REM UPDATE DATE: October 5, 2025
 REM ==============================================================================
 
-echo Building GPIO16 blink...
+echo Building...
 
 REM ==============================================================================
 REM Assemble Source Files
 REM ==============================================================================
-arm-none-eabi-as -mcpu=cortex-m33 -mthumb main.s -o uart.o
+arm-none-eabi-as -mcpu=cortex-m33 -mthumb vector_table.s -o vector_table.o
+if errorlevel 1 goto error
+
+arm-none-eabi-as -mcpu=cortex-m33 -mthumb reset_handler.s -o reset_handler.o
+if errorlevel 1 goto error
+
+arm-none-eabi-as -mcpu=cortex-m33 -mthumb stack.s -o stack.o
+if errorlevel 1 goto error
+
+arm-none-eabi-as -mcpu=cortex-m33 -mthumb xosc.s -o xosc.o
+if errorlevel 1 goto error
+
+arm-none-eabi-as -mcpu=cortex-m33 -mthumb reset.s -o reset.o
+if errorlevel 1 goto error
+
+arm-none-eabi-as -mcpu=cortex-m33 -mthumb coprocessor.s -o coprocessor.o
+if errorlevel 1 goto error
+
+arm-none-eabi-as -mcpu=cortex-m33 -mthumb uart.s -o uart_module.o
+if errorlevel 1 goto error
+
+arm-none-eabi-as -mcpu=cortex-m33 -mthumb gpio.s -o gpio.o
+if errorlevel 1 goto error
+
+arm-none-eabi-as -mcpu=cortex-m33 -mthumb delay.s -o delay.o
+if errorlevel 1 goto error
+
+arm-none-eabi-as -mcpu=cortex-m33 -mthumb main.s -o main.o
 if errorlevel 1 goto error
 
 arm-none-eabi-as -mcpu=cortex-m33 -mthumb image_def.s -o image_def.o
@@ -27,7 +54,7 @@ if errorlevel 1 goto error
 REM ==============================================================================
 REM Link Object Files
 REM ==============================================================================
-arm-none-eabi-ld -T linker.ld uart.o image_def.o -o uart.elf
+arm-none-eabi-ld -T linker.ld vector_table.o reset_handler.o stack.o xosc.o reset.o coprocessor.o uart_module.o gpio.o delay.o main.o image_def.o -o uart.elf
 if errorlevel 1 goto error
 
 REM ==============================================================================
