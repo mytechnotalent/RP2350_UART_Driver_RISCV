@@ -10,12 +10,6 @@ An RP2350 UART driver written entirely in Assembler.
 
 <br>
 
-# Install ARM Toolchain
-## NOTE: Be SURE to select `Add path to environment variable` on setup.
-[HERE](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
-
-<br>
-
 # Hardware
 ## Raspberry Pi Pico 2 w/ Header [BUY](https://www.pishop.us/product/raspberry-pi-pico-2-with-header)
 ## USB A-Male to USB Micro-B Cable [BUY](https://www.pishop.us/product/usb-a-male-to-usb-micro-b-cable-6-inches)
