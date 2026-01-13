@@ -1,10 +1,18 @@
-## FREE Embedded Hacking Self-Study Course [HERE](https://github.com/mytechnotalent/Embedded-Hacking)
+<img src="https://github.com/mytechnotalent/RP2350_UART_Driver/blob/main/RP2350_UART_Driver.png?raw=true">
+
+## FREE Reverse Engineering Self-Study Course [HERE](https://github.com/mytechnotalent/Reverse-Engineering-Tutorial)
 ### VIDEO PROMO [HERE](https://www.youtube.com/watch?v=aD7X9sXirF8)
 
 <br>
 
 # RP2350 UART Driver
 An RP2350 UART driver written entirely in Assembler.
+
+<br>
+
+# Install ARM Toolchain
+## NOTE: Be SURE to select `Add path to environment variable` on setup.
+[HERE](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
 
 <br>
 
