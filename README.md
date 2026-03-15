@@ -1,18 +1,74 @@
-<img src="https://github.com/mytechnotalent/RP2350_UART_Driver/blob/main/RP2350_UART_Driver.png?raw=true">
+<img src="https://github.com/mytechnotalent/RP2350_UART_Driver/blob/main/RP2350_UART_Driver_RISCV.png?raw=true">
 
 ## FREE Reverse Engineering Self-Study Course [HERE](https://github.com/mytechnotalent/Reverse-Engineering-Tutorial)
 ### VIDEO PROMO [HERE](https://www.youtube.com/watch?v=aD7X9sXirF8)
 
 <br>
 
-# RP2350 UART Driver
-An RP2350 UART driver written entirely in Assembler.
+# RP2350 UART Driver RISC-V
+An RP2350 RISC-V UART driver written entirely in Assembler.
 
 <br>
 
-# Install ARM Toolchain
-## NOTE: Be SURE to select `Add path to environment variable` on setup.
-[HERE](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)
+# Install RISC-V Toolchain (Windows / RP2350 Hazard3)
+Official Raspberry Pi guidance for RP2350 RISC-V points to pico-sdk-tools prebuilt releases.
+
+## Official References
+- RP2350 RISC-V quick start in pico-sdk: [HERE](https://github.com/raspberrypi/pico-sdk#risc-v-support-on-rp2350)
+- Tool downloads (official): [HERE](https://github.com/raspberrypi/pico-sdk-tools/releases/tag/v2.0.0-5)
+
+## Install (PowerShell)
+```powershell
+$url = "https://github.com/raspberrypi/pico-sdk-tools/releases/download/v2.0.0-5/riscv-toolchain-14-x64-win.zip"
+$zipPath = "$env:TEMP\riscv-toolchain-14-x64-win.zip"
+$dest = "C:\Users\assem.KEVINTHOMAS\OneDrive\Documents\riscv-toolchain-14"
+
+Invoke-WebRequest -Uri $url -OutFile $zipPath
+New-Item -ItemType Directory -Path $dest -Force | Out-Null
+Expand-Archive -LiteralPath $zipPath -DestinationPath $dest -Force
+Get-ChildItem -Path $dest | Select-Object Name
+```
+
+## Add Toolchain To User PATH (PowerShell)
+```powershell
+$toolBin = "C:\Users\assem.KEVINTHOMAS\OneDrive\Documents\riscv-toolchain-14\bin"
+$currentUserPath = [Environment]::GetEnvironmentVariable("Path", "User")
+if ($currentUserPath -notlike "*$toolBin*") {
+  [Environment]::SetEnvironmentVariable("Path", "$currentUserPath;$toolBin", "User")
+}
+```
+
+Close and reopen your terminal after updating PATH.
+
+## Verify Toolchain
+```powershell
+riscv32-unknown-elf-as --version
+riscv32-unknown-elf-ld --version
+riscv32-unknown-elf-objcopy --version
+```
+
+## Build This Project
+```powershell
+.\build.bat
+```
+
+If your toolchain uses a different prefix, pass it explicitly:
+```powershell
+.\build.bat riscv-none-elf
+```
+
+## UART Terminal Setup (PuTTY)
+- Speed: 115200
+- Data bits: 8
+- Stop bits: 1
+- Parity: None
+- Flow control: None
+
+## UART Wiring (Pico 2 Target)
+- GP0 = UART0 TX (target output)
+- GP1 = UART0 RX (target input)
+- GND must be common between target and USB-UART adapter/debug probe
+- Cross wiring is required: adapter TX -> GP1, adapter RX -> GP0
 
 <br>
 
@@ -31,6 +87,11 @@ An RP2350 UART driver written entirely in Assembler.
 .\build.bat
 ```
 
+## Optional Toolchain Prefix Override
+```
+.\build.bat riscv-none-elf
+```
+
 <br>
 
 # Clean
@@ -46,10 +107,10 @@ An RP2350 UART driver written entirely in Assembler.
  * FILE: main.s
  *
  * DESCRIPTION:
- * RP2350 Bare-Metal UART Main Application.
+ * RP2350 Bare-Metal UART Main Application (RISC-V).
  * 
  * BRIEF:
- * Main application entry point for RP2350 UART driver. Contains the
+ * Main application entry point for RP2350 RISC-V UART driver. Contains the
  * main loop that echoes UART input to output.
  *
  * AUTHOR: Kevin Thomas
@@ -57,9 +118,6 @@ An RP2350 UART driver written entirely in Assembler.
  * UPDATE DATE: November 27, 2025
  */
 
-.syntax unified                                  // use unified assembly syntax
-.cpu cortex-m33                                  // target Cortex-M33 core
-.thumb                                           // use Thumb instruction set
 
 .include "constants.s"
 
@@ -67,8 +125,8 @@ An RP2350 UART driver written entirely in Assembler.
  * Initialize the .text section. 
  * The .text section contains executable code.
  */
-.section .text                                   // code section
-.align 2                                         // align to 4-byte boundary
+.section .text                                   # code section
+.align 2                                         # align to 4-byte boundary
 
 /**
  * @brief   Main application entry point.
@@ -78,36 +136,32 @@ An RP2350 UART driver written entirely in Assembler.
  * @param   None
  * @retval  None
  */
-.global main                                     // export main
-.type main, %function                            // mark as function
+.global main                                     # export main
+.type main, @function                            # mark as function
 main:
-.Push_Registers:
-  push  {r4-r12, lr}                             // push registers r4-r12, lr to the stack
 .Loop:
-  bl    UART0_In                                 // call UART0_In
-  bl    UART0_Out                                // call UART0_Out
-  b     .Loop                                    // loop forever
-.Pop_Registers:
-  pop   {r4-r12, lr}                             // pop registers r4-r12, lr from the stack
-  bx    lr                                       // return to caller
+  call  UART0_In                                 # call UART0_In
+  call  UART0_Out                                # call UART0_Out
+  j     .Loop                                    # loop forever
+  ret                                            # return to caller
 
 /**
  * Test data and constants.
  * The .rodata section is used for constants and static data.
  */
-.section .rodata                                 // read-only data section
+.section .rodata                                 # read-only data section
 
 /**
  * Initialized global data.
  * The .data section is used for initialized global or static variables.
  */
-.section .data                                   // data section
+.section .data                                   # data section
 
 /**
  * Uninitialized global data.
  * The .bss section is used for uninitialized global or static variables.
  */
-.section .bss                                    // BSS section
+.section .bss                                    # BSS section
 ```
 
 <br>

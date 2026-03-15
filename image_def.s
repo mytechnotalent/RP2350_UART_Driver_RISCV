@@ -17,17 +17,29 @@
  *
  * AUTHOR: Kevin Thomas
  * CREATION DATE: October 5, 2025
- * UPDATE DATE: October 5, 2025
+ * UPDATE DATE: March 15, 2026
  */
 
-.section .picobin_block, "a"                     // place IMAGE_DEF block in flash
+.include "constants.s"
 
-.word  0xffffded3                                // PICOBIN_BLOCK_MARKER_START
-.byte  0x42                                      // PICOBIN_BLOCK_ITEM_1BS_IMAGE_TYPE
-.byte  0x1                                       // item is 1 word in size
-.hword 0b0001000000100001                        // SECURE mode (0x1021)
-.byte  0xff                                      // PICOBIN_BLOCK_ITEM_2BS_LAST
-.hword 0x0001                                    // item is 1 word in size
-.byte  0x0                                       // pad
-.word  0x0                                       // relative pointer to next block (0 = loop to self)
-.word  0xab123579                                // PICOBIN_BLOCK_MARKER_END
+.section .picobin_block, "a"                     # place IMAGE_DEF block in flash
+.align  2
+embedded_block:
+.word  0xffffded3                                # PICOBIN_BLOCK_MARKER_START
+.byte  0x42                                      # PICOBIN_BLOCK_ITEM_1BS_IMAGE_TYPE
+.byte  0x1                                       # item is 1 word in size
+.hword 0x1101                                    # EXE + RISCV + RP2350
+
+.byte  0x44                                      # PICOBIN_BLOCK_ITEM_1BS_ENTRY_POINT
+.byte  0x3                                       # 3 words to next item
+.byte  0x0                                       # pad
+.byte  0x0                                       # pad
+.word  Reset_Handler                             # RISC-V reset entry point
+.word  STACK_TOP                                 # initial stack pointer value
+
+.byte  0xff                                      # PICOBIN_BLOCK_ITEM_2BS_LAST
+.hword (embedded_block_end - embedded_block - 16) / 4
+.byte  0x0                                       # pad
+.word  0x0                                       # relative pointer to next block (0 = loop to self)
+.word  0xab123579                                # PICOBIN_BLOCK_MARKER_END
+embedded_block_end:

@@ -54,6 +54,7 @@ SECTIONS
   .embedded_block :
   {
     KEEP(*(.embedded_block))
+    KEEP(*(.picobin_block))
   } > FLASH :text
 
   /**
@@ -75,7 +76,6 @@ SECTIONS
     . = ALIGN(4);
     *(.text*)
     *(.rodata*)
-    KEEP(*(.ARM.attributes))
   } > FLASH :text
 
   /**

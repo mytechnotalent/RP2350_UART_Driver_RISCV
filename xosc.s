@@ -2,7 +2,7 @@
  * FILE: xosc.s
  *
  * DESCRIPTION:
- * RP2350 External Crystal Oscillator (XOSC) Functions.
+ * RP2350 External Crystal Oscillator (XOSC) Functions (RISC-V).
  * 
  * BRIEF:
  * Provides functions to initialize the external crystal oscillator
@@ -13,9 +13,6 @@
  * UPDATE DATE: November 27, 2025
  */
 
-.syntax unified                                  // use unified assembly syntax
-.cpu cortex-m33                                  // target Cortex-M33 core
-.thumb                                           // use Thumb instruction set
 
 .include "constants.s"
 
@@ -23,8 +20,8 @@
  * Initialize the .text section. 
  * The .text section contains executable code.
  */
-.section .text                                   // code section
-.align 2                                         // align to 4-byte boundary
+.section .text                                   # code section
+.align 2                                         # align to 4-byte boundary
 
 /**
  * @brief   Init XOSC and wait until it is ready.
@@ -36,20 +33,19 @@
  * @retval  None
  */
 .global Init_XOSC
-.type Init_XOSC, %function
+.type Init_XOSC, @function
 Init_XOSC:
-  ldr   r0, =XOSC_STARTUP                        // load XOSC_STARTUP address
-  ldr   r1, =0x00c4                              // set delay 50,000 cycles
-  str   r1, [r0]                                 // store value into XOSC_STARTUP
-  ldr   r0, =XOSC_CTRL                           // load XOSC_CTRL address
-  ldr   r1, =0x00FABAA0                          // set 1_15MHz, freq range, actual 14.5MHz
-  str   r1, [r0]                                 // store value into XOSC_CTRL
+  li    t0, XOSC_STARTUP                         # load XOSC_STARTUP address
+  li    t1, 0x00c4                               # set delay 50,000 cycles
+  sw    t1, 0(t0)                                # store value into XOSC_STARTUP
+  li    t0, XOSC_CTRL                            # load XOSC_CTRL address
+  li    t1, 0x00FABAA0                           # set 1_15MHz, freq range, actual 14.5MHz
+  sw    t1, 0(t0)                                # store value into XOSC_CTRL
 .Init_XOSC_Wait:
-  ldr   r0, =XOSC_STATUS                         // load XOSC_STATUS address
-  ldr   r1, [r0]                                 // read XOSC_STATUS value
-  tst   r1, #(1<<31)                             // test STABLE bit
-  beq   .Init_XOSC_Wait                          // wait until stable bit is set
-  bx    lr                                       // return
+  li    t0, XOSC_STATUS                          # load XOSC_STATUS address
+  lw    t1, 0(t0)                                # read XOSC_STATUS value
+  bgez  t1, .Init_XOSC_Wait                      # bit31 clear -> still unstable
+  ret                                            # return
 
 /**
  * @brief   Enable XOSC peripheral clock.
@@ -60,11 +56,12 @@ Init_XOSC:
  * @retval  None
  */
 .global Enable_XOSC_Peri_Clock
-.type Enable_XOSC_Peri_Clock, %function
+.type Enable_XOSC_Peri_Clock, @function
 Enable_XOSC_Peri_Clock:
-  ldr   r0, =CLK_PERI_CTRL                       // load CLK_PERI_CTRL address
-  ldr   r1, [r0]                                 // read CLK_PERI_CTRL value
-  orr   r1, r1, #(1<<11)                         // set ENABLE bit
-  orr   r1, r1, #(4<<5)                          // set AUXSRC: XOSC_CLKSRC bit
-  str   r1, [r0]                                 // store value into CLK_PERI_CTRL
-  bx    lr                                       // return
+  li    t0, CLK_PERI_CTRL                        # load CLK_PERI_CTRL address
+  lw    t1, 0(t0)                                # read CLK_PERI_CTRL value
+  li    t2, (1<<11)                              # ENABLE bit mask
+  or    t1, t1, t2                               # set ENABLE bit
+  ori   t1, t1, 128                              # set AUXSRC: XOSC_CLKSRC bit
+  sw    t1, 0(t0)                                # store value into CLK_PERI_CTRL
+  ret                                            # return

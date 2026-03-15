@@ -12,9 +12,6 @@
  * UPDATE DATE: November 27, 2025
  */
 
-.syntax unified                                  // use unified assembly syntax
-.cpu cortex-m33                                  // target Cortex-M33 core
-.thumb                                           // use Thumb instruction set
 
 .include "constants.s"
 
@@ -22,8 +19,8 @@
  * Initialize the .text section. 
  * The .text section contains executable code.
  */
-.section .text                                   // code section
-.align 2                                         // align to 4-byte boundary
+.section .text                                   # code section
+.align 2                                         # align to 4-byte boundary
 
 /**
  * @brief   Delay_MS.
@@ -35,19 +32,15 @@
  * @retval  None
  */
 .global Delay_MS
-.type Delay_MS, %function
+.type Delay_MS, @function
 Delay_MS:
-.Delay_MS_Push_Registers:
-  push  {r4-r12, lr}                             // push registers r4-r12, lr to the stack
 .Delay_MS_Check:
-  cmp   r0, #0                                   // if MS is not valid, return
-  ble   .Delay_MS_Done                           // branch if less or equal to 0 
+  blez  a0, .Delay_MS_Done                       # if MS is not valid, return
 .Delay_MS_Setup:
-  ldr   r4, =3600                                // loops per MS based on 14.5MHz clock
-  mul   r5, r0, r4                               // MS * 3600
+  li    t0, 3600                                 # loops per MS based on 14.5MHz clock
+  mul   t1, a0, t0                               # MS * 3600
 .Delay_MS_Loop:
-  subs  r5, r5, #1                               // decrement counter
-  bne   .Delay_MS_Loop                           // branch until zero
+  addi  t1, t1, -1                               # decrement counter
+  bnez  t1, .Delay_MS_Loop                       # branch until zero
 .Delay_MS_Done:
-  pop   {r4-r12, lr}                             // pop registers r4-r12, lr from the stack
-  bx    lr                                       // return
+  ret                                            # return

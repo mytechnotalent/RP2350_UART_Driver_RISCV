@@ -2,7 +2,7 @@
  * FILE: reset.s
  *
  * DESCRIPTION:
- * RP2350 Reset Controller Functions.
+ * RP2350 Reset Controller Functions (RISC-V).
  * 
  * BRIEF:
  * Provides functions to initialize subsystems by clearing their
@@ -13,9 +13,6 @@
  * UPDATE DATE: November 27, 2025
  */
 
-.syntax unified                                  // use unified assembly syntax
-.cpu cortex-m33                                  // target Cortex-M33 core
-.thumb                                           // use Thumb instruction set
 
 .include "constants.s"
 
@@ -23,8 +20,8 @@
  * Initialize the .text section. 
  * The .text section contains executable code.
  */
-.section .text                                   // code section
-.align 2                                         // align to 4-byte boundary
+.section .text                                   # code section
+.align 2                                         # align to 4-byte boundary
 
 /**
  * @brief   Init subsystem.
@@ -35,16 +32,18 @@
  * @retval  None
  */
 .global Init_Subsystem
-.type Init_Subsystem, %function
+.type Init_Subsystem, @function
 Init_Subsystem:
 .GPIO_Subsystem_Reset:
-  ldr   r0, =RESETS_RESET                        // load RESETS->RESET address
-  ldr   r1, [r0]                                 // read RESETS->RESET value
-  bic   r1, r1, #(1<<6)                          // clear IO_BANK0 bit
-  str   r1, [r0]                                 // store value into RESETS->RESET address
+  li    t0, RESETS_RESET                         # load RESETS->RESET address
+  lw    t1, 0(t0)                                # read RESETS->RESET value
+  li    t2, (1<<6)                               # IO_BANK0 reset mask
+  not   t2, t2                                   # invert mask
+  and   t1, t1, t2                               # clear IO_BANK0 bit
+  sw    t1, 0(t0)                                # store value into RESETS->RESET address
 .GPIO_Subsystem_Reset_Wait:
-  ldr   r0, =RESETS_RESET_DONE                   // load RESETS->RESET_DONE address
-  ldr   r1, [r0]                                 // read RESETS->RESET_DONE value
-  tst   r1, #(1<<6)                              // test IO_BANK0 reset done
-  beq   .GPIO_Subsystem_Reset_Wait               // wait until done
-  bx    lr                                       // return
+  li    t0, RESETS_RESET_DONE                    # load RESETS->RESET_DONE address
+  lw    t1, 0(t0)                                # read RESETS->RESET_DONE value
+  andi  t1, t1, (1<<6)                           # test IO_BANK0 reset done
+  beqz  t1, .GPIO_Subsystem_Reset_Wait           # wait until done
+  ret                                            # return
