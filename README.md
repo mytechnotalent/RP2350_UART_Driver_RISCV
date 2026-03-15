@@ -21,7 +21,7 @@ Official Raspberry Pi guidance for RP2350 RISC-V points to pico-sdk-tools prebui
 ```powershell
 $url = "https://github.com/raspberrypi/pico-sdk-tools/releases/download/v2.0.0-5/riscv-toolchain-14-x64-win.zip"
 $zipPath = "$env:TEMP\riscv-toolchain-14-x64-win.zip"
-$dest = "C:\Users\assem.KEVINTHOMAS\OneDrive\Documents\riscv-toolchain-14"
+$dest = "$HOME\riscv-toolchain-14"
 
 Invoke-WebRequest -Uri $url -OutFile $zipPath
 New-Item -ItemType Directory -Path $dest -Force | Out-Null
@@ -31,7 +31,7 @@ Get-ChildItem -Path $dest | Select-Object Name
 
 ## Add Toolchain To User PATH (PowerShell)
 ```powershell
-$toolBin = "C:\Users\assem.KEVINTHOMAS\OneDrive\Documents\riscv-toolchain-14\bin"
+$toolBin = "$HOME\riscv-toolchain-14\bin"
 $currentUserPath = [Environment]::GetEnvironmentVariable("Path", "User")
 if ($currentUserPath -notlike "*$toolBin*") {
   [Environment]::SetEnvironmentVariable("Path", "$currentUserPath;$toolBin", "User")
