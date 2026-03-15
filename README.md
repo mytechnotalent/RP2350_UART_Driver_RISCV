@@ -6,7 +6,7 @@
 <br>
 
 # RP2350 UART Driver RISC-V
-An RP2350 RISC-V UART driver written entirely in RISC-V Assembler.
+An RP2350 UART driver written entirely in RISC-V Assembler.
 
 <br>
 
