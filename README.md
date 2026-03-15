@@ -1,4 +1,4 @@
-<img src="https://github.com/mytechnotalent/RP2350_UART_Driver/blob/main/RP2350_UART_Driver_RISCV.png?raw=true">
+<img src="https://github.com/mytechnotalent/RP2350_UART_Driver_RISCV/blob/main/RP2350_UART_Driver_RISCV.png?raw=true">
 
 ## FREE Reverse Engineering Self-Study Course [HERE](https://github.com/mytechnotalent/Reverse-Engineering-Tutorial)
 ### VIDEO PROMO [HERE](https://www.youtube.com/watch?v=aD7X9sXirF8)
