@@ -77,9 +77,9 @@ Base address of the XOSC peripheral block.  This value comes directly from the R
 ### XOSC Register Offsets
 
 ```asm
-.equ XOSC_CTRL,                   XOSC_BASE + 0x00 # = 0x40048000
-.equ XOSC_STATUS,                 XOSC_BASE + 0x04 # = 0x40048004
-.equ XOSC_STARTUP,                XOSC_BASE + 0x0c # = 0x4004800C
+.equ XOSC_CTRL,                 XOSC_BASE + 0x00 # = 0x40048000
+.equ XOSC_STATUS,               XOSC_BASE + 0x04 # = 0x40048004
+.equ XOSC_STARTUP,              XOSC_BASE + 0x0c # = 0x4004800C
 ```
 
 Each register address is computed as base + offset:
@@ -137,7 +137,7 @@ Base address of the clock controller peripheral.
 ### CLK_PERI_CTRL = CLOCKS_BASE + 0x48
 
 ```asm
-.equ CLK_PERI_CTRL,               CLOCKS_BASE + 0x48 # = 0x40010048
+.equ CLK_PERI_CTRL,           CLOCKS_BASE + 0x48 # = 0x40010048
 ```
 
 The peripheral clock control register.  Bit 11 enables the clock; bits [7:5] select the clock source (AUXSRC).
@@ -155,9 +155,9 @@ Base address of the reset controller.
 ### Reset Register Addresses
 
 ```asm
-.equ RESETS_RESET,                RESETS_BASE + 0x0 # = 0x40020000
-.equ RESETS_RESET_CLEAR,          RESETS_BASE + 0x3000 # = 0x40023000
-.equ RESETS_RESET_DONE,           RESETS_BASE + 0x8 # = 0x40020008
+.equ RESETS_RESET,             RESETS_BASE + 0x0 # = 0x40020000
+.equ RESETS_RESET_CLEAR,    RESETS_BASE + 0x3000 # = 0x40023000
+.equ RESETS_RESET_DONE,        RESETS_BASE + 0x8 # = 0x40020008
 ```
 
 | Constant | Address | Purpose |

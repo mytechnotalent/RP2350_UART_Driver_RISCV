@@ -125,10 +125,10 @@ UART0_Out:
 .type UART0_In, @function
 UART0_In:
 .UART0_In_loop:
-  li    t0, UART0_BASE                            # base address for uart0 registers
-  lw    t1, 0x18(t0)                              # read UARTFR
-  andi  t1, t1, 16                                # mask RXFE bit
-  bnez  t1, .UART0_In_loop                        # if RX FIFO is empty, loop
-  lw    a0, 0x00(t0)                              # load data from UARTDR into a0
-  andi  a0, a0, 0xff                              # keep lower 8 bits valid
-  ret                                             # return
+  li    t0, UART0_BASE                           # base address for uart0 registers
+  lw    t1, 0x18(t0)                             # read UARTFR
+  andi  t1, t1, 16                               # mask RXFE bit
+  bnez  t1, .UART0_In_loop                       # if RX FIFO is empty, loop
+  lw    a0, 0x00(t0)                             # load data from UARTDR into a0
+  andi  a0, a0, 0xff                             # keep lower 8 bits valid
+  ret                                            # return
